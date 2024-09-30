@@ -48,3 +48,14 @@ aws eks --region ap-south-1 update-kubeconfig --name sen-devops
 ```
 kubectl get nodes
 ```
+
+-  Delete the EKS Cluster
+```
+eksctl delete cluster \
+  --name sen-devops \
+  --region ap-south-1
+```
+- Verify Deletion
+```
+eksctl get clusters --region ap-south-1
+```
