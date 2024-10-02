@@ -1,6 +1,7 @@
 # Deploy Amazon Prime Clone Application AWS using DevSecOps Approach
 
-![Prime Clone Deployment](https://github.com/user-attachments/assets/7ad59495-e514-44bd-a03c-1cb29edca2c4)
+![image](https://github.com/user-attachments/assets/b3db1dc0-5a59-4dcf-9507-b0aeebc7f514)
+
 
 # **Install AWS CLI**
 ```
@@ -61,16 +62,9 @@ sudo apt-get update
 sudo apt-get install trivy
 ```
 
-
-# **Install Docker Scout:**
-```
-docker login       `Give Dockerhub credentials here`
-```
-```
-curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh -s -- -b /usr/local/bin
-```
 # Deployment Stages:
-<img width="966" alt="Screenshot 2024-09-15 at 7 20 49 AM" src="https://github.com/user-attachments/assets/ddb5e618-79ab-49b3-8f13-b5114824eec3">
+ ![image](https://github.com/user-attachments/assets/da872659-3bd5-4ec3-9e74-c952885d86d2)
+
 
 
 # Jenkins Complete pipeline
