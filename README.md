@@ -65,7 +65,10 @@ sudo apt-get install trivy
 # Deployment Stages:
  ![image](https://github.com/user-attachments/assets/da872659-3bd5-4ec3-9e74-c952885d86d2)
 
-
+## Sonarqube Setup On Docker
+```
+docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
+```
 
 # Jenkins Complete pipeline
 ```
