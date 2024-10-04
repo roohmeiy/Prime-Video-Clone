@@ -74,20 +74,19 @@ docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
 ```
 pipeline {
     agent any
+
     tools {
-        jdk 'jdk17'
-        nodejs 'node16'
+        nodejs 'node16' // Ensure 'node16' is configured in Jenkins under Manage Jenkins > Global Tool Configuration
     }
-    environment {
-        SCANNER_HOME = tool 'sonar-scanner'
-    }
+
     stages {
-        stage ("clean workspace") {
+        stage('Clean Workspace') {
             steps {
                 cleanWs()
             }
         }
-        stage ("Git checkout") {
+
+        stage('Git Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/Fir3eye/Prime-Video-Clone.git'
             }
@@ -103,28 +102,29 @@ pipeline {
                 }
             }
         }
-        stage("quality gate") {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
-                }
-            }
-        }
         stage ("Trivy File Scan") {
             steps {
                 sh "trivy fs . > trivy.txt"
             }
         }
-        stage ("Build Docker Image") {
-            steps {
-                sh "docker build -t prime-clone ."
-            }
-        }
-        stage ("Tag & Push to DockerHub") {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'dockerhubs') {
-                        sh "docker tag prime-clone fir3eye/prime-clone:latest"
+                    // Build the Docker image tagged as 'prime-clone:latest'
+                    sh "docker build -t prime-clone:latest ."
+                }
+            }
+        }
+        stage ("Trivy Image Scan") {
+            steps {
+                sh "trivy image fir3eye/prime-clone:latest"
+            }
+        }
+        stage('Tag & Push to DockerHub') {
+            steps {
+                script {
+                    withDockerRegistry([ credentialsId: 'dockerhub', url: '' ]) {
+                        sh "docker tag prime-clone:latest fir3eye/prime-clone:latest"
                         sh "docker push fir3eye/prime-clone:latest"
                     }
                 }
@@ -135,33 +135,37 @@ pipeline {
                 sh 'docker run -d --name amazon-prime -p 80:80 fir3eye/prime-clone:latest'
             }
         }
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'k8s', variable: 'KUBECONFIG_FILE')]) {
+                        sh """
+                            # Set the KUBECONFIG environment variable
+                            export KUBECONFIG=${KUBECONFIG_FILE}
+                            
+                            # Navigate to the Kubernetes manifests directory
+                            cd Kubernetes
+                            
+                            # Apply all Kubernetes manifests
+                            kubectl apply -f .
+                            
+                        """
+                    }
+                }
+            }
+        }
     }
     post {
-        always {
-            emailext attachLog: true,
-                subject: "'${currentBuild.result}'",
-                body: """
-                    <html>
-                    <body>
-                        <div style="background-color: #FFA07A; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: white; font-weight: bold;">Project: ${env.JOB_NAME}</p>
-                        </div>
-                        <div style="background-color: #90EE90; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: white; font-weight: bold;">Build Number: ${env.BUILD_NUMBER}</p>
-                        </div>
-                        <div style="background-color: #87CEEB; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: white; font-weight: bold;">URL: ${env.BUILD_URL}</p>
-                        </div>
-                    </body>
-                    </html>
-                """,
-                to: 'your_mail@gmail.com',
-                mimeType: 'text/html',
-                attachmentsPattern: 'trivy.txt'
+        success {
+            echo '✅ Deployment successful!'
+            // Optional: Add notifications (e.g., email, Slack) here
+        }
+        failure {
+            echo '❌ Deployment failed.'
+            // Optional: Add notifications (e.g., email, Slack) here
         }
     }
 }
-
 
 ```
 **Phase 4: Monitoring**
