@@ -17,24 +17,32 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/roohmeiy/Prime-Video-Clone.git'
             }
         }
+
         stage ("Trivy File Scan") {
             steps {
                 sh "trivy fs . > trivy.txt"
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image tagged as 'prime-clone:latest'
-                    sh "docker build -t prime-clone:latest ."
+                    try {
+                        // Build the Docker image tagged as 'prime-clone:latest'
+                        sh "docker build -t prime-clone:latest ."
+                    } catch (Exception e) {
+                        error "Docker build failed: ${e.getMessage()}"
+                    }
                 }
             }
         }
+
         stage ("Trivy Image Scan") {
             steps {
-                sh "trivy image roohmeiy/prime-clone:latest"
+                sh "trivy image prime-clone:latest"
             }
         }
+
         stage('Tag & Push to DockerHub') {
             steps {
                 script {
@@ -49,7 +57,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'k8s_cred', variable: 'KUBECONFIG_FILE')]) {
+                    withCredentials([file(credentialsId: 'k8s-cred', variable: 'KUBECONFIG_FILE')]) {
                         sh """
                             # Set the KUBECONFIG environment variable
                             export KUBECONFIG=${KUBECONFIG_FILE}
@@ -59,7 +67,6 @@ pipeline {
                             
                             # Apply all Kubernetes manifests
                             kubectl apply -f .
-                            
                         """
                     }
                 }
