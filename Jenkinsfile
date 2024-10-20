@@ -14,7 +14,7 @@ pipeline {
 
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Fir3eye/Prime-Video-Clone.git'
+                git branch: 'main', url: 'https://github.com/roohmeiy/Prime-Video-Clone.git'
             }
         }
         stage ("Trivy File Scan") {
@@ -32,15 +32,15 @@ pipeline {
         }
         stage ("Trivy Image Scan") {
             steps {
-                sh "trivy image fir3eye/prime-clone:latest"
+                sh "trivy image roohmeiy/prime-clone:latest"
             }
         }
         stage('Tag & Push to DockerHub') {
             steps {
                 script {
-                    withDockerRegistry([ credentialsId: 'dockerhubs', url: '' ]) {
-                        sh "docker tag prime-clone:latest fir3eye/prime-clone:latest"
-                        sh "docker push fir3eye/prime-clone:latest"
+                    withDockerRegistry([ credentialsId: 'Docker_hub', url: '' ]) {
+                        sh "docker tag prime-clone:latest roohmeiy/prime-clone:latest"
+                        sh "docker push roohmeiy/prime-clone:latest"
                     }
                 }
             }
@@ -49,7 +49,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'k8s', variable: 'KUBECONFIG_FILE')]) {
+                    withCredentials([file(credentialsId: 'k8s_cred', variable: 'KUBECONFIG_FILE')]) {
                         sh """
                             # Set the KUBECONFIG environment variable
                             export KUBECONFIG=${KUBECONFIG_FILE}
